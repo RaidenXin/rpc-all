@@ -44,21 +44,20 @@ public final class RpcClient {
         serviceInfos = RpcServiceFactory.newInstance(urls);
         nettyClient = new NettyClient();
         atomicLong = new AtomicInteger(0);
-        String rulesClassName = System.getProperty("rpc.service.rules");
-        if (StringUtils.isBlank(rulesClassName)){
-            rules = new PollingRules();
+        RpcRoutingRulesFactory factory = RpcRoutingRulesFactory.createFactory();
+        List<RpcRoutingRules> rpcRoutingRules = factory.getBeans();
+        if (rpcRoutingRules != null && rpcRoutingRules.size() > 0){
+            String rulesClassName = System.getProperty("rpc.service.rules");
+            rules = rpcRoutingRules.stream().filter(rules -> rules.getClass().getName().equals(rulesClassName)).findFirst().orElse(new PollingRules());
         }else {
-            RpcRoutingRulesFactory factory = RpcRoutingRulesFactory.createFactory();
-            List<RpcRoutingRules> rpcRoutingRules = factory.getBeans();
-            if (rpcRoutingRules != null){
-                rules = rpcRoutingRules.stream().filter(rules -> rulesClassName.equals(rules.getClass().getName())).findFirst().orElse(new PollingRules());
-            }
+            rules = new PollingRules();
         }
     }
 
 
 
     public static <T> RpcResponse<T> request(Object params, Class<T> clazz){
+        //请求流水号
         int serialNo = atomicLong.addAndGet(1);
         RpcCommand request = new RpcCommand();
         request.setSerialNo(serialNo);
