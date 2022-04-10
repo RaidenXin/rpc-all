@@ -1,7 +1,7 @@
 package com.rpc.netty.client.utils;
 
 import com.alibaba.fastjson.JSON;
-import com.rpc.netty.service.response.RpcResponse;
+import com.rpc.netty.core.response.RpcResponse;
 
 import java.nio.charset.Charset;
 

@@ -11,7 +11,7 @@
     <modules>
         <module>rpc-client</module>
         <module>rpc-service</module>
-        <module>rpc-common</module>
+        <module>rpc-core</module>
     </modules>
 
     <properties>
@@ -26,14 +26,16 @@
         <dependencies>
             <dependency>
                 <groupId>rpc-all</groupId>
-                <artifactId>rpc-common</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>rpc-all</groupId>
                 <artifactId>rpc-service</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>rpc-all</groupId>
+                <artifactId>rpc-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
 
             <dependency>
                 <groupId>rpc-all</groupId>

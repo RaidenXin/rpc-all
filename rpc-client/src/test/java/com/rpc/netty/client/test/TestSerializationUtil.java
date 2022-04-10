@@ -2,7 +2,7 @@ package com.rpc.netty.client.test;
 
 import com.rpc.netty.client.test.model.ResponseData;
 import com.rpc.netty.client.utils.SerializationUtil;
-import com.rpc.netty.service.response.RpcResponse;
+import com.rpc.netty.core.response.RpcResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 

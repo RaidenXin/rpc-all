@@ -8,7 +8,7 @@ import com.rpc.netty.client.rule.PollingRules;
 import com.rpc.netty.client.rule.RpcRoutingRules;
 import com.rpc.netty.client.utils.SerializationUtil;
 import com.rpc.netty.client.utils.StringUtils;
-import com.rpc.netty.service.response.RpcResponse;
+import com.rpc.netty.core.response.RpcResponse;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;

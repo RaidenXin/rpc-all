@@ -30,7 +30,7 @@
         </dependency>
         <dependency>
             <groupId>rpc-all</groupId>
-            <artifactId>rpc-common</artifactId>
+            <artifactId>rpc-core</artifactId>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>

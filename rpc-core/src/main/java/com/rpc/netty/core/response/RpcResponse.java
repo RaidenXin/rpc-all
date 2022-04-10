@@ -1,4 +1,5 @@
-package com.rpc.netty.service.response;
+package com.rpc.netty.core.response;
+
 /**
  * @创建人:Raiden
  * @Descriotion:
