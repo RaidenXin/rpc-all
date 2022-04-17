@@ -158,7 +158,7 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<RpcCommand> 
                 }catch (Exception e){
                     log.error("NettyService 处理请求出错！", e);
                     response = RpcResponse.fail(e.getMessage());
-                    rpcCommand.setBody(SerializationUtil.encode(response));
+                    rpcCommand.setBody(SerializationUtil.encodeResponse(response));
                     try {
                         ctx.writeAndFlush(rpcCommand);
                     } catch (Throwable t) {

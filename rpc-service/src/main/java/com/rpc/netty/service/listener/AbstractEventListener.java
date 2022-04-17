@@ -54,7 +54,7 @@ public abstract class AbstractEventListener<T extends Event> implements EventLis
             Object config = onEventHandler(event);
             rpcResponse = RpcResponse.success(config);
             try {
-                response.setBody(SerializationUtil.encode(rpcResponse));
+                response.setBody(SerializationUtil.encodeResponse(rpcResponse));
                 ctx.writeAndFlush(response);
             } catch (Throwable e) {
                 log.error("process request over, but response failed", e);
@@ -64,7 +64,7 @@ public abstract class AbstractEventListener<T extends Event> implements EventLis
             removeListener();
         }catch (Exception e){
             rpcResponse = RpcResponse.fail(e.getMessage());
-            response.setBody(SerializationUtil.encode(rpcResponse));
+            response.setBody(SerializationUtil.encodeResponse(rpcResponse));
             try {
                 ctx.writeAndFlush(response);
             } catch (Throwable t) {
@@ -93,7 +93,7 @@ public abstract class AbstractEventListener<T extends Event> implements EventLis
             response.setSerialNo(this.serialNo);
             //如果超时了就直接返回空
             RpcResponse rpcResponse = RpcResponse.success(null);
-            response.setBody(SerializationUtil.encode(rpcResponse));
+            response.setBody(SerializationUtil.encodeResponse(rpcResponse));
             try {
                 ctx.writeAndFlush(response);
             } catch (Throwable e) {

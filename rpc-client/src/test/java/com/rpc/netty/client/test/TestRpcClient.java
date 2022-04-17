@@ -17,17 +17,11 @@ import java.util.Properties;
  */
 public class TestRpcClient {
 
-
-    public static void main(String[] args) {
-        testRpcClient();
-    }
-
-    public static void testRpcClient(){
+    @Test
+    public void testRpcClient(){
         try {
-            Properties properties = new Properties();
+            Properties properties = System.getProperties();
             properties.put("rpc.service.url", "127.0.0.1:9959");
-//            properties.put("line.separator", "10");
-            System.setProperties(properties);
             Map<String, String> params = new HashMap<>();
             params.put("key", "value");
             RpcResponse<ResponseData> request = RpcClient.request("/test/handler", null, ResponseData.class);
