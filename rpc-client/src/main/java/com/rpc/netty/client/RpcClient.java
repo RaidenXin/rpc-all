@@ -32,7 +32,12 @@ public final class RpcClient {
     private RpcClient(){}
 
     static {
-        init();
+        try {
+            init();
+        }catch (Throwable e){
+            e.printStackTrace();
+            log.error(e.getMessage(), e);
+        }
     }
 
 
@@ -56,10 +61,11 @@ public final class RpcClient {
 
 
 
-    public static <T> RpcResponse<T> request(Object params, Class<T> clazz){
+    public static <T> RpcResponse<T> request(String path, Object params, Class<T> clazz){
         //请求流水号
         int serialNo = atomicLong.addAndGet(1);
         RpcCommand request = new RpcCommand();
+        request.setPath(path);
         request.setSerialNo(serialNo);
         request.setBody(SerializationUtil.encode(params));
         try {

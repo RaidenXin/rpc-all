@@ -29,11 +29,17 @@ public final class SerializationUtil {
     }
 
     public static <T> T decode(final byte[] data, Class<T> classOfT) {
+        if (classOfT == null){
+            return null;
+        }
         final String json = new String(data, CHARSET_UTF8);
         return JSON.parseObject(json, classOfT);
     }
 
     public static <T> RpcResponse<T> decodeResponse(final byte[] data, Class<T> classOfT) {
+        if (classOfT == null){
+            return null;
+        }
         final String json = new String(data, CHARSET_UTF8);
         int endIndex = CHARACTER_LENGTH_OF_SIZE + Integer.parseInt(json.substring(0, CHARACTER_LENGTH_OF_SIZE));
         String responseJson = json.substring(CHARACTER_LENGTH_OF_SIZE, endIndex);

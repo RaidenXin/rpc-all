@@ -7,7 +7,7 @@ import com.rpc.netty.service.event.Event;
  * @创建人:Raiden
  * @Descriotion:
  * @Date:Created in 17:39 2022/4/3
- * @Modified By:
+ * @Modified By: 抽象的事件监听者
  */
 public abstract class AbstractEventListener<T extends Event> implements EventListener<T> {
 

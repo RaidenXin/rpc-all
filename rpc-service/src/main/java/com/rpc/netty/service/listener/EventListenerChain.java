@@ -11,7 +11,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @创建人:Raiden
  * @Descriotion:
  * @Date:Created in 15:42 2022/4/3
- * @Modified By:
+ * @Modified By: 监听者链
  */
 @Slf4j
 public class EventListenerChain implements EventListener {

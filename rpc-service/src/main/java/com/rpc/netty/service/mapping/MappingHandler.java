@@ -58,6 +58,10 @@ public final class MappingHandler {
         return (T) method.invoke(instance, params);
     }
 
+    public <T> T invoke() throws InvocationTargetException, IllegalAccessException {
+        return (T) method.invoke(instance);
+    }
+
     public static final MappingHandler build(String path,Object instance,Method method,Class<?> paramType){
         if (path == null || path.isEmpty()){
             throw new IllegalArgumentException("path can not be null!");
@@ -67,9 +71,6 @@ public final class MappingHandler {
         }
         if (method == null){
             throw new IllegalArgumentException("method can not be null!");
-        }
-        if (paramType == null){
-            throw new IllegalArgumentException("paramType can not be null!");
         }
         MappingHandler handler = new MappingHandler();
         handler.path = path;
