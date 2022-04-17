@@ -2,6 +2,7 @@ package com.rpc.netty.service.factory;
 
 import com.rpc.netty.service.handler.ServerWorkHandler;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
@@ -14,7 +15,14 @@ import java.util.ServiceLoader;
  */
 public interface ServerWorkHandlerFactory {
 
-    List<ServerWorkHandler> getBeans();
+    default List<ServerWorkHandler> getBeans() {
+        ServiceLoader<ServerWorkHandler> handlers = ServiceLoader.load(ServerWorkHandler.class);
+        List<ServerWorkHandler> workHandlers = new ArrayList<>();
+        for (ServerWorkHandler workHandler : handlers){
+            workHandlers.add(workHandler);
+        }
+        return workHandlers;
+    }
 
     static ServerWorkHandlerFactory createFactory(){
         ServiceLoader<ServerWorkHandlerFactory> handlers = ServiceLoader.load(ServerWorkHandlerFactory.class);
@@ -22,6 +30,6 @@ public interface ServerWorkHandlerFactory {
         if (iterator.hasNext()){
             return iterator.next();
         }
-        return new DefaultServerWorkHandlerFactory();
+        return new ServerWorkHandlerFactory(){};
     }
 }

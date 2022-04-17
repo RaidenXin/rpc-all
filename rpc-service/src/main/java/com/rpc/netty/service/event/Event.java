@@ -8,4 +8,9 @@ package com.rpc.netty.service.event;
  */
 public interface Event {
 
+    /**
+     * 这个 key 必须与监器的一致
+     * @return
+     */
+    String getKey();
 }

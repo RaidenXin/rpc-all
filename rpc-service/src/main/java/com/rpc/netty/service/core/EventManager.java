@@ -1,12 +1,13 @@
 package com.rpc.netty.service.core;
 
 import com.rpc.netty.service.event.Event;
+import com.rpc.netty.service.factory.EventProcessorFactory;
 import com.rpc.netty.service.listener.EventListener;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.ParameterizedType;
+import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -16,17 +17,24 @@ import java.util.concurrent.ConcurrentHashMap;
  * @Modified By:
  */
 @Slf4j
-public final class EventManager {
+final class EventManager {
 
-    private static final Map<Class<? extends Event>, EventProcessor> eventProcessor;
+    private static Map<Class<? extends Event>, EventProcessor> eventProcessor;
 
     static {
-        eventProcessor = new ConcurrentHashMap<>();
-        ServiceLoader<EventProcessor> eventProcessors = ServiceLoader.load(EventProcessor.class);
-        for (EventProcessor processor : eventProcessors){
-            //获取处理的泛型类
-            Class<? extends Event> key = (Class)((ParameterizedType)processor.getClass().getGenericSuperclass()).getActualTypeArguments()[0];
-            eventProcessor.putIfAbsent(key, processor);
+        if (eventProcessor == null){
+            synchronized (EventManager.class){
+                if (eventProcessor == null){
+                    eventProcessor = new ConcurrentHashMap<>();
+                    EventProcessorFactory factory = EventProcessorFactory.createFactory();
+                    List<EventProcessor> eventProcessors = factory.getBeans();
+                    for (EventProcessor processor : eventProcessors){
+                        //获取处理的泛型类
+                        Class<? extends Event> key = (Class)((ParameterizedType)processor.getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+                        eventProcessor.putIfAbsent(key, processor);
+                    }
+                }
+            }
         }
     }
 

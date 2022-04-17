@@ -10,6 +10,8 @@ import com.rpc.netty.client.utils.SerializationUtil;
 import com.rpc.netty.client.utils.StringUtils;
 import com.rpc.netty.core.response.RpcResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -20,28 +22,17 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @Date:Created in 13:13 2022/4/5
  * @Modified By:
  */
-@Slf4j
 public final class RpcClient {
 
-
+    private static final Logger log = LoggerFactory.getLogger(RpcClient.class);
     private static AtomicInteger atomicLong;
     private static RpcService[] serviceInfos;
     private static NettyClient nettyClient;
     private static RpcRoutingRules rules;
 
-    private RpcClient(){}
+    private static RpcClient client;
 
-    static {
-        try {
-            init();
-        }catch (Throwable e){
-            e.printStackTrace();
-            log.error(e.getMessage(), e);
-        }
-    }
-
-
-    private static void init(){
+    private RpcClient(){
         final String urls = System.getProperty("rpc.service.url");
         if (StringUtils.isBlank(urls)){
             throw new IllegalArgumentException("The {rpc.service.url} configuration cannot be empty！");
@@ -59,9 +50,21 @@ public final class RpcClient {
         }
     }
 
-
+    static {
+        try {
+            client = new RpcClient();
+        }catch (Throwable e){
+            log.error(e.getMessage(), e);
+        }
+    }
 
     public static <T> RpcResponse<T> request(String path, Object params, Class<T> clazz){
+        return client.requestHandler(path, params, clazz);
+    }
+
+
+
+    private <T> RpcResponse<T> requestHandler(String path, Object params, Class<T> clazz){
         //请求流水号
         int serialNo = atomicLong.addAndGet(1);
         RpcCommand request = new RpcCommand();

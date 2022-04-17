@@ -1,4 +1,4 @@
-package com.rpc.netty.service.handler;
+package com.rpc.netty.service.core;
 
 import com.rpc.netty.client.command.RpcCommand;
 import com.rpc.netty.client.exception.RpcException;
@@ -8,10 +8,12 @@ import com.rpc.netty.service.core.EventListenerHelper;
 import com.rpc.netty.service.core.EventManager;
 import com.rpc.netty.service.event.Event;
 import com.rpc.netty.service.factory.ServerWorkHandlerFactory;
+import com.rpc.netty.service.handler.ServerWorkHandler;
+import com.rpc.netty.service.listener.AbstractEventListener;
 import com.rpc.netty.service.listener.EventListener;
 import com.rpc.netty.service.mapping.MappingHandler;
 import com.rpc.netty.core.response.RpcResponse;
-import com.rpc.netty.service.task.CleanListenerTask;
+import com.rpc.netty.service.core.CleanListenerTask;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -132,6 +134,12 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<RpcCommand> 
                     EventListener<? extends Event> listener = EventListenerHelper.getListener();
                     //如果返回了监听器说明要监听
                     if (listener != null){
+                        if (listener instanceof AbstractEventListener){
+                            //设置通道
+                            ((AbstractEventListener) listener).setChannel(ctx);
+                            //设置流水号
+                            ((AbstractEventListener) listener).setSerialNo(serialNo);
+                        }
                         //注册一个监听器
                         EventManager.registerEventListener(listener);
                         //设置一个清理任务

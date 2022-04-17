@@ -6,7 +6,7 @@ import com.rpc.netty.client.decoder.NettyDecoder;
 import com.rpc.netty.client.encoder.NettyEncoder;
 import com.rpc.netty.client.utils.NettyUtils;
 import com.rpc.netty.client.utils.RpcHelper;
-import com.rpc.netty.service.handler.NettyServerHandler;
+import com.rpc.netty.service.core.NettyServerHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
@@ -21,6 +21,8 @@ import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -33,8 +35,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @Date:Created in 16:39 2022/3/27
  * @Modified By: Netty 服务端
  */
-@Slf4j
 public class NettyService {
+
+    private static final Logger log = LoggerFactory.getLogger(NettyService.class);
 
     private static final int SERVER_WORKER_THREADS = 8;
 

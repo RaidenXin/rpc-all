@@ -1,7 +1,6 @@
-package com.rpc.netty.service.task;
+package com.rpc.netty.service.core;
 
 import com.rpc.netty.client.NettyClient;
-import com.rpc.netty.service.core.EventManager;
 import com.rpc.netty.service.listener.EventListener;
 import lombok.extern.slf4j.Slf4j;
 
