@@ -9,7 +9,6 @@ import com.rpc.netty.client.rule.RpcRoutingRules;
 import com.rpc.netty.client.utils.SerializationUtil;
 import com.rpc.netty.client.utils.StringUtils;
 import com.rpc.netty.core.response.RpcResponse;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +23,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public final class RpcClient {
 
+
+    private static final String RPC_SERVICE_URL = "rpc.service.url";
+    private static final String RPC_SERVICE_RULES = "rpc.service.rules";
+
     private static final Logger log = LoggerFactory.getLogger(RpcClient.class);
     private static AtomicInteger atomicLong;
     private static RpcService[] serviceInfos;
@@ -33,7 +36,7 @@ public final class RpcClient {
     private static RpcClient client;
 
     private RpcClient(){
-        final String urls = System.getProperty("rpc.service.url");
+        final String urls = System.getProperty(RPC_SERVICE_URL);
         if (StringUtils.isBlank(urls)){
             throw new IllegalArgumentException("The {rpc.service.url} configuration cannot be empty！");
         }
@@ -43,7 +46,7 @@ public final class RpcClient {
         RpcRoutingRulesFactory factory = RpcRoutingRulesFactory.createFactory();
         List<RpcRoutingRules> rpcRoutingRules = factory.getBeans();
         if (rpcRoutingRules != null && rpcRoutingRules.size() > 0){
-            String rulesClassName = System.getProperty("rpc.service.rules");
+            String rulesClassName = System.getProperty(RPC_SERVICE_RULES);
             rules = rpcRoutingRules.stream().filter(rules -> rules.getClass().getName().equals(rulesClassName)).findFirst().orElse(new PollingRules());
         }else {
             rules = new PollingRules();
@@ -66,11 +69,8 @@ public final class RpcClient {
 
     private <T> RpcResponse<T> requestHandler(String path, Object params, Class<T> clazz){
         //请求流水号
-        int serialNo = atomicLong.addAndGet(1);
-        RpcCommand request = new RpcCommand();
-        request.setPath(path);
-        request.setSerialNo(serialNo);
-        request.setBody(SerializationUtil.encode(params));
+        final int serialNo = atomicLong.addAndGet(1);
+        RpcCommand request = RpcCommand.build(serialNo, path, SerializationUtil.encode(params));
         try {
             RpcService service = rules.select(serviceInfos, serialNo);
             final RpcCommand response = nettyClient.invokeSync(service.getAddr(), request, NettyClient.LONG_POLL_TIMEOUT * 1000 * 2);

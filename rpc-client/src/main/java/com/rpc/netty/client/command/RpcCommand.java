@@ -102,6 +102,14 @@ public class RpcCommand {
         return cmd;
     }
 
+    public static final RpcCommand build(int serialNo, String path, byte[] body) {
+        RpcCommand command = new RpcCommand();
+        command.serialNo = serialNo;
+        command.path = path;
+        command.body = body;
+        return command;
+    }
+
     @Override
     public String toString() {
         return "RpcCommand{" +

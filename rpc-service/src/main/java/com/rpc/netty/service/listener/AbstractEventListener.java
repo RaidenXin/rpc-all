@@ -61,7 +61,6 @@ public abstract class AbstractEventListener<T extends Event> implements EventLis
                 log.error(rpcResponse.toString());
                 log.error(response.toString());
             }
-            removeListener();
         }catch (Exception e){
             rpcResponse = RpcResponse.fail(e.getMessage());
             response.setBody(SerializationUtil.encodeResponse(rpcResponse));
@@ -72,6 +71,7 @@ public abstract class AbstractEventListener<T extends Event> implements EventLis
                 log.error(rpcResponse.toString());
                 log.error(response.toString());
             }
+        }finally {
             removeListener();
         }
     }

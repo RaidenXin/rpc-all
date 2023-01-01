@@ -25,6 +25,7 @@ import java.net.SocketAddress;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -68,35 +69,46 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<RpcCommand> 
         for (ServerWorkHandler serverWorkHandler : beans){
             if (serverWorkHandler != null){
                 Class<? extends ServerWorkHandler> clazz = serverWorkHandler.getClass();
-                RpcRequestMapping requestMapping = clazz.getAnnotation(RpcRequestMapping.class);
-                String rootPath = requestMapping != null ? requestMapping.path() : "";
                 Method[] methods = clazz.getMethods();
                 for (Method method : methods){
                     RpcRequestMapping mapping = method.getAnnotation(RpcRequestMapping.class);
-                    if (mapping != null){
-                        Class<?>[] parameterTypes = method.getParameterTypes();
-                        StringBuilder path = new StringBuilder();
-                        if (rootPath.startsWith(OBLIQUE_LINE)){
-                            path.append(rootPath);
-                        }else {
-                            path.append(OBLIQUE_LINE);
-                            path.append(rootPath);
-                        }
-                        String secondaryPath = mapping.path();
-                        if (secondaryPath.startsWith(OBLIQUE_LINE)){
-                            path.append(secondaryPath);
-                        }else {
-                            path.append(OBLIQUE_LINE);
-                            path.append(secondaryPath);
-                        }
-                        String api = path.toString();
-                        MappingHandler mappingHandler = MappingHandler.build(api, serverWorkHandler, method, parameterTypes.length > 0 ? parameterTypes[0] : null);
-                        methodMapping.putIfAbsent(api, mappingHandler);
+                    if (Objects.isNull(mapping)){
+                        continue;
                     }
+                    Class<?>[] parameterTypes = method.getParameterTypes();
+                    String api = getApiPath(clazz, mapping);
+                    MappingHandler mappingHandler = MappingHandler.build(api, serverWorkHandler, method, parameterTypes.length > 0 ? parameterTypes[0] : null);
+                    methodMapping.putIfAbsent(api, mappingHandler);
                 }
             }
         }
         this.methodMapping = methodMapping;
+    }
+
+    /**
+     * 获取请求路径
+     * @param clazz
+     * @param mapping
+     * @return
+     */
+    private String getApiPath(Class<? extends ServerWorkHandler> clazz, RpcRequestMapping mapping) {
+        RpcRequestMapping requestMapping = clazz.getAnnotation(RpcRequestMapping.class);
+        String rootPath = requestMapping != null ? requestMapping.path() : "";
+        StringBuilder path = new StringBuilder();
+        if (rootPath.startsWith(OBLIQUE_LINE)){
+            path.append(rootPath);
+        }else {
+            path.append(OBLIQUE_LINE);
+            path.append(rootPath);
+        }
+        String secondaryPath = mapping.path();
+        if (secondaryPath.startsWith(OBLIQUE_LINE)){
+            path.append(secondaryPath);
+        }else {
+            path.append(OBLIQUE_LINE);
+            path.append(secondaryPath);
+        }
+        return path.toString();
     }
 
     @Override
@@ -105,7 +117,7 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<RpcCommand> 
     }
 
     private void processRequestCommand(ChannelHandlerContext ctx, RpcCommand msg) {
-        int serialNo = msg.getSerialNo();
+        final int serialNo = msg.getSerialNo();
         String path = msg.getPath();
         byte[] body = msg.getBody();
         try {
@@ -116,10 +128,10 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<RpcCommand> 
                 RpcResponse<?> response;
                 try {
                     MappingHandler mappingHandler = methodMapping.get(path);
-                    if (mappingHandler == null){
+                    if (Objects.isNull(mappingHandler)){
                         throw new RpcException("No corresponding method was found");
                     }
-
+                    // 解析出请求参数
                     Object request = SerializationUtil.decode(body, mappingHandler.getParamType());
                     if (log.isInfoEnabled()){
                         SocketAddress socketAddress = ctx.channel().remoteAddress();
@@ -130,30 +142,14 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<RpcCommand> 
                             log.info("msg:{}", request);
                         }
                     }
-                    Object result = request == null ? mappingHandler.invoke() :  mappingHandler.invoke(request);
+                    Object result = Objects.isNull(request) ? mappingHandler.invoke() :  mappingHandler.invoke(request);
                     EventListener<? extends Event> listener = EventListenerHelper.getListener();
                     //如果返回了监听器说明要监听
-                    if (listener != null){
-                        if (listener instanceof AbstractEventListener){
-                            //设置通道
-                            ((AbstractEventListener) listener).setChannel(ctx);
-                            //设置流水号
-                            ((AbstractEventListener) listener).setSerialNo(serialNo);
-                        }
-                        //注册一个监听器
-                        EventManager.registerEventListener(listener);
-                        //设置一个清理任务
-                        submitCleanupTask(listener);
+                    if (Objects.nonNull(listener)){
+                        // 注册事件监听器
+                        registerEventListener(listener, ctx, serialNo);
                     }else {
-                        response = RpcResponse.success(result);
-                        rpcCommand.setBody(SerializationUtil.encodeResponse(response));
-                        try {
-                            ctx.writeAndFlush(rpcCommand);
-                        } catch (Throwable e) {
-                            log.error("process request over, but response failed", e);
-                            log.error(result.toString());
-                            log.error(rpcCommand.toString());
-                        }
+                        writeAndFlush(ctx, rpcCommand, result);
                     }
                 }catch (Exception e){
                     log.error("NettyService 处理请求出错！", e);
@@ -176,10 +172,23 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<RpcCommand> 
         }
     }
 
-    private void submitCleanupTask(EventListener<? extends Event> listener){
+    /**
+     * 注册事件监听器
+     * @param listener
+     */
+    private void registerEventListener(EventListener<? extends Event> listener, ChannelHandlerContext ctx, final int serialNo) {
+        if (listener instanceof AbstractEventListener){
+            //设置通道
+            ((AbstractEventListener) listener).setChannel(ctx);
+            //设置流水号
+            ((AbstractEventListener) listener).setSerialNo(serialNo);
+        }
+        //注册一个监听器
+        EventManager.registerEventListener(listener);
+        //设置一个清理任务
         CleanListenerTask task = CleanListenerTask.build(listener);
         taskDelayQueue.put(task);
-        //提交一个清理任务
+        //提交一个清理任务监听器的任务
         clearWorkerExecutor.execute(() -> {
             CleanListenerTask queryTask = null;
             do {
@@ -190,5 +199,23 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<RpcCommand> 
             }while (queryTask == null);
             queryTask.run();
         });
+    }
+
+    /**
+     * 回写数据
+     * @param ctx
+     * @param rpcCommand
+     * @param result
+     */
+    private void writeAndFlush(ChannelHandlerContext ctx, RpcCommand rpcCommand, Object result) {
+        final RpcResponse<?> response = RpcResponse.success(result);
+        rpcCommand.setBody(SerializationUtil.encodeResponse(response));
+        try {
+            ctx.writeAndFlush(rpcCommand);
+        } catch (Throwable e) {
+            log.error("process request over, but response failed", e);
+            log.error(result.toString());
+            log.error(rpcCommand.toString());
+        }
     }
 }
